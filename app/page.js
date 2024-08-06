@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react';
 import { firestore } from '@/firebase';
-import { Box, Button, Modal, Stack, TextField, Typography, ButtonGroup } from '@mui/material';
+import { Box, Button, Modal, Stack, TextField, Typography, ButtonGroup  } from '@mui/material';
 import { collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, addDoc } from 'firebase/firestore';
 import dayjs from 'dayjs';
 
@@ -16,6 +16,10 @@ export default function Home() {
     const [requestQuantity, setRequestQuantity] = useState('');
     const [removeQuantity, setRemoveQuantity] = useState('');
     const [requestedItems, setRequestedItems] = useState([]);
+
+    const [searchQuery, setSearchQuery] = useState('');
+    const [filteredInventory, setFilteredInventory] = useState([]);
+
     const colors = {
         primaryText: '#393E29',
         secondaryText: '#D9BFB1',
@@ -29,6 +33,13 @@ export default function Home() {
         updateInventory();
         updateRequestedItems();
     }, []);
+
+    useEffect(() => {
+        // Filter inventory based on search query
+        const queryLower = searchQuery.toLowerCase();
+        setFilteredInventory(inventory.filter(item => item.name.toLowerCase().includes(queryLower)));
+    }, [searchQuery, inventory]);
+
 
     const updateInventory = async () => {
         const snapshot = await getDocs(query(collection(firestore, 'inventory')));
@@ -114,10 +125,21 @@ export default function Home() {
                      flex="1"
                      overflow="hidden"
                      sx={{ backgroundColor: colors.secondaryText, borderRadius: '16px', marginRight: '16px' }}>
-                    <Typography color={colors.primaryText} variant="h6"
-                                fontWeight="bold" sx = {{marginLeft: '16px'}}> Inventory </Typography>
+
+                    <Stack spacing={2} direction={"row"} display="flex" alignItems="center" sx={{marginLeft: '16px' }}>
+                        <Typography color={colors.primaryText} variant="h6"
+                                    fontWeight="bold" sx = {{marginLeft: '16px'}}> Inventory </Typography>
+                        <TextField
+                            variant="outlined"
+                            placeholder="Search for items..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            sx={{ color: colors.buttonText }}
+                        />
+                    </Stack>
+
                     <Stack spacing={2} overflow="auto" padding="16px">
-                        {inventory.map(({ name, quantity, lastAdded, imageUrl }) => (
+                        {filteredInventory.map(({ name, quantity, lastAdded, imageUrl }) => (
                             <Box
                                 key={name}
                                 width="100%"
@@ -125,9 +147,9 @@ export default function Home() {
                                 display="flex"
                                 alignItems="center"
                                 justifyContent="space-between"
-                                backgroundColor={colors.itemBackground}
+                                backgroundColor="#BB998E"
                                 padding={2}
-                                sx={{borderRadius: "16px"}}
+                                sx={{ borderRadius: "16px" }}
                             >
                                 <Stack spacing={1} direction="column" alignItems="left">
                                     {imageUrl && <img src={imageUrl} alt={name} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '8px' }} />}
